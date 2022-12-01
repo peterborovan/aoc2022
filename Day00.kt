@@ -2,9 +2,9 @@ import java.io.File
 import java.lang.NumberFormatException
 
 fun main() {
-    val input1 = File("day00.txt").readText()
+    val input1 = File("in/day00.txt").readText()
 
-    val input2 = File("day00.txt").readLines()
+    val input2 = File("in/day00.txt").readLines()
     //val parts = input1.split("-").map { it.toInt() }
     //val ints = input2.map { it.toInt() }
 
