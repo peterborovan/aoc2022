@@ -9,100 +9,65 @@ private fun touch(x1:Int, y1:Int, x2:Int, y2:Int) : Boolean {
                     return true;
     return false
 }
+val dirs = listOf(
+    Pair(1, 0), Pair(-1, 0), Pair(0, -1), Pair(0, 1),
+    Pair(1, 1), Pair(-1, 1), Pair(-1, -1), Pair(1, -1),
+)
+
 fun main() {
     val inp = File(
         "in/day09.txt"
         ).readLines()
-    val dirs = listOf(
-        Pair(1, 0), Pair(-1, 0), Pair(0, -1), Pair(0, 1),
-        Pair(1, 1), Pair(-1, 1), Pair(-1, -1), Pair(1, -1),
-    )
 
-    var hx = 0
-    var hy = 0
-    var tx = 0
-    var ty = 0
+    var head = Pair(0,0)
+    var tail = Pair(0,0)
     val s = mutableSetOf<Pair<Int,Int>>()
-    s.add(Pair(tx,ty))
-    for (l in inp) {
-        val parts = l.split(" ")
-        val d = parts[0]
-        val n = parts[1].toInt()
-//        println("$d $n")
-        repeat(n) {
-            if (d == "U") {
-                 hx++
-            } else if (d == "D") {
-                hx--
-            } else if (d == "L") {
-                hy--
-           } else if (d == "R") {
-               hy++
-           }
-            if (!((hx == tx && hy == ty) || touch(tx,ty,hx,hy))) {
-                for ((dtx,dty) in dirs) {
-                    if (touch(tx, ty , hx-dtx, hy-dty)) {
-                        tx = hx-dtx
-                        ty = hy-dty
-                        break
-                    }
-                }
-            }
-//            println("[$hx $hy] [$tx $ty]")
-            s.add(Pair(tx,ty))
-        }
-    }
-    val tails =
-    arrayOf(
-        Pair(0,0),  //H
-        Pair(0,0), //1
-        Pair(0,0), //2
-        Pair(0,0), //3
-        Pair(0,0), //4
-        Pair(0,0), //5
-        Pair(0,0), //6
-        Pair(0,0), //7
-        Pair(0,0),//8
-        Pair(0,0) //9
-    )
+    s.add(tail)
 
+    val tails = Array(10, {i -> Pair(0,0)})
     val s9 = mutableSetOf<Pair<Int,Int>>()
     s9.add(Pair(0,0))
+
     for (l in inp) {
         val parts = l.split(" ")
         val d = parts[0]
         val n = parts[1].toInt()
-//        println("$d $n")
         repeat(n) {
-            if (d == "U") {
-                tails[0] = Pair(tails[0].first+1, tails[0].second)
-            } else if (d == "D") {
-                tails[0] = Pair(tails[0].first-1, tails[0].second)
-            } else if (d == "L") {
-                tails[0] = Pair(tails[0].first, tails[0].second-1)
-            } else if (d == "R") {
-                tails[0] = Pair(tails[0].first, tails[0].second+1)
-            }
+            // part A
+            head = updateHead(d, head)
+            tail = updateTail(head, tail)
+            s.add(tail)
+            // part B
+            tails[0] = updateHead(d, tails[0])
             for(i in 1..9) {
-                hx = tails[i-1].first
-                hy = tails[i-1].second
-                tx = tails[i].first
-                ty = tails[i].second
-
-                if (!((hx == tx && hy == ty) || touch(tx, ty, hx, hy))) {
-                    for ((dtx, dty) in dirs) {
-                        if (touch(tx, ty, hx - dtx, hy - dty)) {
-                            tx = hx - dtx
-                            ty = hy - dty
-                            break
-                        }
-                    }
-                }
-                tails[i] = Pair(tx,ty)
+                tails[i] = updateTail(tails[i-1], tails[i])
             }
-            s9.add(Pair(tails[9].first, tails[9].second))
+            s9.add(tails[9])
         }
     }
     println("partA: ${s.size}")
     println("partB: ${s9.size}")
+}
+
+private fun updateTail(head : Pair<Int, Int>, tail : Pair<Int, Int>): Pair<Int, Int> {
+    val (hx, hy) = head
+    val (tx, ty) = tail
+    if (!((hx == tx && hy == ty) || touch(tx, ty, hx, hy))) {
+        for ((dtx, dty) in dirs) {
+            if (touch(tx, ty, hx - dtx, hy - dty)) {
+                return Pair(hx - dtx, hy - dty)
+            }
+        }
+    }
+    return Pair(tx,ty)
+}
+
+private fun updateHead(d: String, head : Pair<Int, Int>): Pair<Int, Int> {
+    val (hx, hy) = head
+    return when(d) {
+        "U" -> Pair(hx+1, hy)
+        "D" -> Pair(hx-1, hy)
+        "L" -> Pair(hx, hy-1)
+        else -> Pair(hx, hy+1)
+    }
 }
