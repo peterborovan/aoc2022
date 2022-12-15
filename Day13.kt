@@ -1,19 +1,86 @@
 import java.io.File
 
+abstract class X {}
+class C(val n : Int) : X() {
+    override fun toString() = "$n"
+}
+data class L(val lst : List<X>) : X() {
+    override fun toString() = lst.joinToString(separator = ",", prefix = "[", postfix = "]")
+}
+private fun String.parse() : Pair<X, String> {
+    if (this[0].isDigit()) {
+        return Pair(C(this.takeWhile { it.isDigit() }.toInt()), this.dropWhile { it.isDigit() })
+    } else { // this[0] == '['
+        val result = mutableListOf<X>()
+        var str = this.substring(1)
+        while (!str.startsWith(']')) {
+            val (x,newstr) = str.parse()
+            result.add(x)
+            str = newstr
+            if (str.startsWith(","))
+                str = str.substring(1) // ,
+            else
+                break
+        }
+        return Pair(L(result), str.substring(1)) //]
+    }
+}
+
+private fun cmp(a : X, b:X) : Int {
+    if (a is C && b is C) return (a.n.compareTo(b.n))
+    else if (a is C && b !is C) return cmp (L(listOf(a)), b)
+    else if (/*a !is C && */ b is C) return cmp (a,L(listOf(b)))
+    else if ((a as L).lst.size == 0 && (b as L).lst.size == 0) return 0 //[],[]
+    else {
+        var i = 0
+        val la = (a as L).lst
+        val lb = (b as L).lst
+        while (i < la.size && i < lb.size) {
+            val c = cmp(la[i], lb[i])
+            if (c != 0) return c
+            i++
+        }
+        if (i >= la.size && i >= lb.size) return 0
+        else if (i >= lb.size) return 1
+        else return -1
+    }
+}
+
 fun main() {
     val inp = File(
-        "in/day13_.txt"
+        "in/day13.txt"
     ).readLines()
+    var sum = 0L
+    val partB = mutableListOf<X>()
+    for (i in 0 until inp.size step 3) {
+        val (left, _) = inp[i].parse()
+        partB.add(left)
+        val (right, _) = inp[i + 1].parse()
+        partB.add(right)
+        val c = cmp(left, right)
+        if (c <= 0) sum += i / 3 + 1
+    }
+    println("PartA: $sum")
+    val dva = L(listOf(L(listOf(C(2)))))
+    val sest = L(listOf(L(listOf(C(6)))))
+    partB.addAll(listOf(dva, sest))
+    partB.sortWith({ a, b -> cmp(a, b) })
+    println("PartB: ${(1 + partB.indexOf(dva)) * (1 + partB.indexOf(sest))}")
+}
+
+    //---- prolog
 //    for (i in 0 until inp.size step 3) {
 //        println("n(${i/3}, ${inp[i]}, ${inp[i+1]}).")
 //    }
 
-    println("alll([")
-    for (i in 0 until inp.size step 3) {
-        println("\t${inp[i]},")
-        println("\t${inp[i+1]},")
-    }
-    println("]).")
+//    println("alll([")
+//    for (i in 0 until inp.size step 3) {
+//        println("\t${inp[i]},")
+//        println("\t${inp[i+1]},")
+//    }
+//    println("]).")
+
+
 
 
     /*
@@ -541,4 +608,4 @@ alll([
 	[1,[2,[3,[4,[5,6,0]]]],8,9]
 ]).
      */
-}
+
